@@ -1,0 +1,61 @@
+<% include layout.ejs %>
+<div id="menu-list" class="row"></div>
+
+<div id="cart" class="fixed-action-btn">
+  <a class="btn-floating btn-large red" id="open-cart">
+    <i class="large material-icons">shopping_cart</i>
+  </a>
+</div>
+
+<script>
+async function loadMenu(){
+  const res = await fetch('/api/menu');
+  const items = await res.json();
+  const container = document.getElementById('menu-list');
+  container.innerHTML = items.map(i=>`
+    <div class="col s12 m6">
+      <div class="card">
+        <div class="card-content">
+          <span class="card-title">${i.name} - ₹${i.price}</span>
+          <p>${i.description || ''}</p>
+          <a class="btn add" data-id="${i._id}" data-name="${i.name}" data-price="${i.price}">Add</a>
+        </div>
+      </div>
+    </div>`).join('');
+  attachAdd();
+}
+
+let cart = [];
+function attachAdd(){
+  document.querySelectorAll('.add').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const id = btn.dataset.id;
+      const name = btn.dataset.name;
+      const price = +btn.dataset.price;
+      const exist = cart.find(c=>c.menuItem===id);
+      if(exist){ exist.qty++; } else cart.push({menuItem:id,name,qty:1,price});
+      M.toast({ html: 'Added to cart' });
+      console.log(cart);
+    });
+  });
+}
+
+async function placeOrder(){
+  if(!cart.length) { M.toast({html:'Cart empty'}); return; }
+  const tableNumber = (new URLSearchParams(window.location.search)).get('table') || '1';
+  const total = cart.reduce((s,i)=>s+i.qty*i.price,0);
+  const body = { items: cart, tableNumber, total };
+  const res = await fetch('/api/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+  if(res.status===201){
+    const result = await res.json();
+    window.location.href = /confirm?orderID=${result.orderID};
+  } else {
+    M.toast({html:'Error placing order'});
+  }
+}
+
+window.onload = loadMenu;
+</script>
+
+
+
