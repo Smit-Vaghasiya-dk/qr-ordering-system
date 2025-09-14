@@ -48,7 +48,7 @@ async function placeOrder(){
   const res = await fetch('/api/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
   if(res.status===201){
     const result = await res.json();
-    window.location.href = /confirm?orderID=${result.orderID};
+    window.location.href = `/confirm?orderID=${result.orderID}`;
   } else {
     M.toast({html:'Error placing order'});
   }
