@@ -1,62 +1,94 @@
-<% include layout.ejs %>
-<div id="menu-list" class="row"></div>
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Menu</title>
+  <!-- Materialize CSS -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/public/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav>
+    <div class="nav-wrapper">
+      <a href="/" class="brand-logo" style="padding-left:12px">QR-Ordering</a>
+      <ul class="right">
+        <li><a href="/dashboard">Dashboard</a></li>
+      </ul>
+    </div>
+  </nav>
 
-<div id="cart" class="fixed-action-btn">
-  <a class="btn-floating btn-large red" id="open-cart">
-    <i class="large material-icons">shopping_cart</i>
-  </a>
-</div>
+  <!-- Content -->
+  <div class="container" style="margin-top:24px">
+    <h4>Menu</h4>
+    <div id="menu-list" class="row"></div>
+  </div>
 
-<script>
-async function loadMenu(){
-  const res = await fetch('/api/menu');
-  const items = await res.json();
-  const container = document.getElementById('menu-list');
-  container.innerHTML = items.map(i=>`
-    <div class="col s12 m6">
-      <div class="card">
-        <div class="card-content">
-          <span class="card-title">${i.name} - ₹${i.price}</span>
-          <p>${i.description || ''}</p>
-          <a class="btn add" data-id="${i._id}" data-name="${i.name}" data-price="${i.price}">Add</a>
-        </div>
-      </div>
-    </div>`).join('');
-  attachAdd();
-}
+  <!-- Floating Cart Button -->
+  <div id="cart" class="fixed-action-btn">
+    <a class="btn-floating btn-large red" id="open-cart">
+      <i class="large material-icons">shopping_cart</i>
+    </a>
+  </div>
 
-let cart = [];
-function attachAdd(){
-  document.querySelectorAll('.add').forEach(btn=>{
-    btn.addEventListener('click',()=>{
-      const id = btn.dataset.id;
-      const name = btn.dataset.name;
-      const price = +btn.dataset.price;
-      const exist = cart.find(c=>c.menuItem===id);
-      if(exist){ exist.qty++; } else cart.push({menuItem:id,name,qty:1,price});
-      M.toast({ html: 'Added to cart' });
-      console.log(cart);
-    });
-    });
-}
+  <!-- Materialize JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
 
-async function placeOrder(){
-  if(!cart.length) { M.toast({html:'Cart empty'}); return; }
-  const tableNumber = (new URLSearchParams(window.location.search)).get('table') || '1';
-  const total = cart.reduce((s,i)=>s+i.qty*i.price,0);
-  const body = { items: cart, tableNumber, total };
-  const res = await fetch('/api/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
-  if(res.status===201){
-    const result = await res.json();
-    window.location.href = `/confirm?orderID=${result.orderID}`;
-  } else {
-    M.toast({html:'Error placing order'});
+  <script>
+  async function loadMenu(){
+    try {
+      const res = await fetch('/api/menu');
+      const items = await res.json();
+      const container = document.getElementById('menu-list');
+      container.innerHTML = items.map(i=>`
+        <div class="col s12 m6">
+          <div class="card">
+            <div class="card-content">
+              <span class="card-title">${i.name} - ₹${i.price}</span>
+              <p>${i.description || ''}</p>
+              <a class="btn add" data-id="${i._id}" data-name="${i.name}" data-price="${i.price}">Add</a>
+            </div>
+          </div>
+        </div>`).join('');
+      attachAdd();
+    } catch (err) {
+      console.error('Failed to load menu', err);
+      M.toast({html: 'Failed to load menu'});
+    }
   }
-}
 
-window.onload = loadMenu;
-</script>
+  let cart = [];
+  function attachAdd(){
+    document.querySelectorAll('.add').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const id = btn.dataset.id;
+        const name = btn.dataset.name;
+        const price = +btn.dataset.price;
+        const exist = cart.find(c=>c.menuItem===id);
+        if(exist){ exist.qty++; } else cart.push({menuItem:id,name,qty:1,price});
+        M.toast({ html: 'Added to cart' });
+        console.log(cart);
+      });
+    });
+  }
 
+  async function placeOrder(){
+    if(!cart.length) { M.toast({html:'Cart empty'}); return; }
+    const tableNumber = (new URLSearchParams(window.location.search)).get('table') || '1';
+    const total = cart.reduce((s,i)=>s+i.qty*i.price,0);
+    const body = { items: cart, tableNumber, total };
+    const res = await fetch('/api/orders', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) });
+    if(res.status===201){
+      const result = await res.json();
+      window.location.href = `/confirm?orderID=${result.orderID}`;
+    } else {
+      M.toast({html:'Error placing order'});
+    }
+  }
 
-
-
+  window.onload = loadMenu;
+  </script>
+</body>
+</html>
