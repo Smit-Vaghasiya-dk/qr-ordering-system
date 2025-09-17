@@ -1,18 +1,78 @@
 <!DOCTYPE html>
 <html>
-<head>
-  <meta charset="utf-8">
-  <title>QR-Ordering</title>
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="/public/styles.css">
-</head>
-<body>
-  <nav>...same nav...</nav>
-  <div class="container" style="margin-top:24px">
-    <%- body %>
-  </div>
-  <div id="cart" class="fixed-action-btn"> ... </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>QR-Ordering</title>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/public/css/styles.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+  </head>
+  <body>
+    <nav>...same nav...</nav>
+
+    <div class="container" style="margin-top: 24px">
+      <%- include(content) %>
+    </div>
+
+    <!-- Cart Floating Action Button -->
+    <div id="cart" class="fixed-action-btn">
+      <a class="btn-floating btn-large red">
+        <i class="large material-icons">shopping_cart</i>
+      </a>
+      <ul id="cart-content">
+        <!-- Cart items will appear here -->
+      </ul>
+    </div>
+
+    <script>
+      // Initialize Materialize Floating Action Button
+      document.addEventListener("DOMContentLoaded", function () {
+        const elems = document.querySelectorAll(".fixed-action-btn");
+        M.FloatingActionButton.init(elems, { hoverEnabled: false });
+      });
+
+      // Cart functionality
+      let cartItems = [];
+
+      function addToCart(item) {
+        const existing = cartItems.find((i) => i.id === item.id);
+        if (existing) {
+          existing.qty += item.qty;
+        } else {
+          cartItems.push(item);
+        }
+        M.toast({ html: `${item.name} x${item.qty} added to cart` });
+        renderCart();
+      }
+
+      function renderCart() {
+        const cartEl = document.getElementById("cart-content");
+        if (!cartEl) return;
+        cartEl.innerHTML = cartItems
+          .map(
+            (i) => `
+          <li>
+            ${i.name} x${i.qty}
+            <a href="#" onclick="removeFromCart(${i.id})" class="secondary-content">
+              <i class="material-icons">delete</i>
+            </a>
+          </li>
+        `
+          )
+          .join("");
+      }
+
+      function removeFromCart(id) {
+        cartItems = cartItems.filter((i) => i.id !== id);
+        renderCart();
+      }
+    </script>
+  </body>
 </html>

@@ -1,21 +1,33 @@
-<% include layout.ejs %>
 <h4>Live Orders</h4>
 <div id="orders"></div>
 
 <script>
-async function fetchOrders(){
-    const res = await fetch('/api/orders');
+  async function fetchOrders() {
+    const res = await fetch("/api/orders");
     const orders = await res.json();
-    const el = document.getElementById('orders');
-    el.innerHTML = orders.map(o=>`
-        <div class="card" style="margin-bottom:16px;">
-            <div class="card-content">
-                <span class="card-title">${o.orderID} - Table ${o.tableNumber} (${o.status})</span>
-                <p>${o.items.map(it=>`${it.name} x${it.qty}`).join(', ')}</p>
-            </div>
-        </div>
-    `).join('');
-}
-fetchOrders();
-setInterval(fetchOrders,5000);
+    const el = document.getElementById("orders");
+
+    el.innerHTML = orders
+      .map(
+        (o) => `
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-content">
+        <span class="card-title">${o.orderID} - Table ${o.tableNumber} (${
+          o.status
+        })</span>
+        <p>${o.items.map((it) => `${it.name} x${it.qty}`).join(", ")}</p>
+        <button class="btn" onclick="addToCart({id:${o.orderID}, name:'Order ${
+          o.orderID
+        }', qty:1})">
+          Add to Cart
+        </button>
+      </div>
+    </div>
+  `
+      )
+      .join("");
+  }
+
+  fetchOrders();
+  setInterval(fetchOrders, 5000);
 </script>
